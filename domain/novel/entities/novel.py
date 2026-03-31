@@ -27,7 +27,7 @@ class Novel(BaseEntity):
         stage: NovelStage = NovelStage.PLANNING
     ):
         super().__init__(id.value)
-        self.id = id  # 保持为 NovelId 类型
+        self.novel_id = id  # 存储 NovelId 对象
         self.title = title
         self.author = author
         self.target_chapters = target_chapters

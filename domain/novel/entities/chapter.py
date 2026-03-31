@@ -45,8 +45,6 @@ class Chapter(BaseEntity):
         return WordCount(content_obj.word_count())
 
     def update_content(self, content: str) -> None:
-        """更新内容"""
-        if not content or not content.strip():
-            raise ValueError("Cannot update to empty content")
+        """更新内容（允许空内容用于草稿）"""
         self._content_text = content
         self.updated_at = datetime.utcnow()
