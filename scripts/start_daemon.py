@@ -124,9 +124,12 @@ def build_daemon() -> AutopilotDaemon:
     except Exception as e:
         logger.warning("ChapterAftermathPipeline 初始化失败，审计将降级：%s", e)
 
+    # 熔断器配置：适应 API 限流
+    # - failure_threshold: 允许连续失败的次数（增大以容忍临时限流）
+    # - reset_timeout: 熔断后等待恢复的时间（秒）
     circuit_breaker = CircuitBreaker(
-        failure_threshold=5,
-        reset_timeout=120,
+        failure_threshold=10,  # 从 5 增加到 10，更宽容临时限流
+        reset_timeout=180,     # 从 120 增加到 180 秒，给 API 更多恢复时间
     )
 
     return AutopilotDaemon(
@@ -137,7 +140,7 @@ def build_daemon() -> AutopilotDaemon:
         planning_service=planning_service,
         story_node_repo=story_node_repo,
         chapter_repository=chapter_repo,
-        poll_interval=5,
+        poll_interval=10,  # 从 5 秒增加到 10 秒，降低轮询频率以减少 API 压力
         voice_drift_service=voice_drift_service,
         circuit_breaker=circuit_breaker,
         chapter_workflow=chapter_workflow,
