@@ -8,6 +8,9 @@ CREATE TABLE IF NOT EXISTS macro_diagnosis_results (
     breakpoints TEXT NOT NULL DEFAULT '[]', -- 扫描结果（JSON 数组）
     breakpoint_count INTEGER NOT NULL DEFAULT 0,
     status TEXT NOT NULL DEFAULT 'completed', -- pending / completed / failed
+    resolved INTEGER NOT NULL DEFAULT 0,   -- 是否已解决（0=未解决，1=已解决）
+    resolved_at TEXT,                      -- 解决时间
+    resolved_by TEXT,                      -- 解决方式：'manual' / 'auto'
     error_message TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (novel_id) REFERENCES novels(id) ON DELETE CASCADE
@@ -15,3 +18,4 @@ CREATE TABLE IF NOT EXISTS macro_diagnosis_results (
 
 CREATE INDEX IF NOT EXISTS idx_macro_diagnosis_novel ON macro_diagnosis_results(novel_id);
 CREATE INDEX IF NOT EXISTS idx_macro_diagnosis_created ON macro_diagnosis_results(novel_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_macro_diagnosis_resolved ON macro_diagnosis_results(novel_id, resolved);

@@ -224,7 +224,8 @@ class MacroDiagnosisService:
         """
         sql = """
             SELECT id, novel_id, trigger_reason, trait, conflict_tags,
-                   breakpoints, breakpoint_count, status, error_message, created_at
+                   breakpoints, breakpoint_count, status, resolved, resolved_at, resolved_by,
+                   error_message, created_at
             FROM macro_diagnosis_results
             WHERE novel_id = ?
             ORDER BY created_at DESC
@@ -244,6 +245,9 @@ class MacroDiagnosisService:
             "breakpoints": json.loads(row["breakpoints"]) if row["breakpoints"] else [],
             "breakpoint_count": row["breakpoint_count"],
             "status": row["status"],
+            "resolved": bool(row["resolved"]),
+            "resolved_at": row["resolved_at"],
+            "resolved_by": row["resolved_by"],
             "error_message": row["error_message"],
             "created_at": row["created_at"]
         }
@@ -264,7 +268,8 @@ class MacroDiagnosisService:
         """
         sql = """
             SELECT id, novel_id, trigger_reason, trait, conflict_tags,
-                   breakpoints, breakpoint_count, status, error_message, created_at
+                   breakpoints, breakpoint_count, status, resolved, resolved_at, resolved_by,
+                   error_message, created_at
             FROM macro_diagnosis_results
             WHERE novel_id = ?
             ORDER BY created_at DESC
@@ -282,11 +287,90 @@ class MacroDiagnosisService:
                 "breakpoints": json.loads(row["breakpoints"]) if row["breakpoints"] else [],
                 "breakpoint_count": row["breakpoint_count"],
                 "status": row["status"],
+                "resolved": bool(row["resolved"]),
+                "resolved_at": row["resolved_at"],
+                "resolved_by": row["resolved_by"],
                 "error_message": row["error_message"],
                 "created_at": row["created_at"]
             }
             for row in rows
         ]
+    
+    def mark_resolved(
+        self,
+        novel_id: str,
+        diagnosis_id: str,
+        resolved_by: str = "manual"
+    ) -> bool:
+        """标记诊断结果为已解决
+        
+        已解决的诊断结果不会再注入到提示词中。
+        
+        Args:
+            novel_id: 小说 ID
+            diagnosis_id: 诊断结果 ID
+            resolved_by: 解决方式（'manual' 或 'auto'）
+        
+        Returns:
+            是否成功标记
+        """
+        try:
+            now = datetime.now(timezone.utc).isoformat()
+            sql = """
+                UPDATE macro_diagnosis_results
+                SET resolved = 1, resolved_at = ?, resolved_by = ?
+                WHERE id = ? AND novel_id = ?
+            """
+            self.db.execute(sql, (now, resolved_by, diagnosis_id, novel_id))
+            self.db.get_connection().commit()
+            
+            logger.info(f"[MacroDiagnosis] 标记已解决: diagnosis_id={diagnosis_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"[MacroDiagnosis] 标记已解决失败: {e}")
+            return False
+    
+    def get_latest_unresolved_result(self, novel_id: str) -> Optional[Dict[str, Any]]:
+        """获取最新的未解决诊断结果
+        
+        用于提示词注入，只返回未解决的诊断结果。
+        
+        Args:
+            novel_id: 小说 ID
+        
+        Returns:
+            最新未解决诊断结果，无结果返回 None
+        """
+        sql = """
+            SELECT id, novel_id, trigger_reason, trait, conflict_tags,
+                   breakpoints, breakpoint_count, status, resolved, resolved_at, resolved_by,
+                   error_message, created_at
+            FROM macro_diagnosis_results
+            WHERE novel_id = ? AND resolved = 0 AND status = 'completed'
+            ORDER BY created_at DESC
+            LIMIT 1
+        """
+        row = self.db.fetch_one(sql, (novel_id,))
+        
+        if not row:
+            return None
+        
+        return {
+            "id": row["id"],
+            "novel_id": row["novel_id"],
+            "trigger_reason": row["trigger_reason"],
+            "trait": row["trait"],
+            "conflict_tags": json.loads(row["conflict_tags"]) if row["conflict_tags"] else [],
+            "breakpoints": json.loads(row["breakpoints"]) if row["breakpoints"] else [],
+            "breakpoint_count": row["breakpoint_count"],
+            "status": row["status"],
+            "resolved": bool(row["resolved"]),
+            "resolved_at": row["resolved_at"],
+            "resolved_by": row["resolved_by"],
+            "error_message": row["error_message"],
+            "created_at": row["created_at"]
+        }
     
     def _save_result(self, result: MacroDiagnosisResult) -> None:
         """保存诊断结果到数据库"""
