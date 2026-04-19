@@ -15,12 +15,12 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: 3001,
     host: '127.0.0.1',
     proxy: {
-      // 代理到后端服务器（默认 8005 端口）
+      // 代理到后端服务器（8006 端口，与安装版区分）
       '/api': {
-        target: 'http://127.0.0.1:8005',
+        target: 'http://127.0.0.1:8006',
         changeOrigin: true,
         ws: true,
         // SSE 长连接，避免代理过早断开

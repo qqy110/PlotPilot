@@ -1,37 +1,37 @@
-# ════════════════════════════════════════════
-# aitext — 核心依赖（轻量级，秒级安装）
-# ════════════════════════════════════════════
+# =============================================
+# PlotPilot - Core dependencies (lightweight, fast install)
+# =============================================
 #
-# 用法: pip install -r requirements.txt
+# Usage: pip install -r requirements.txt
 #
-# 仅包含运行核心功能所需的最小依赖集。
-# 本地向量模型（sentence-transformers / torch / faiss）
-# 已拆分到 requirements-local.txt，按需安装。
+# Only includes minimal dependencies for core functionality.
+# Local vector models (sentence-transformers / torch / faiss)
+# have been moved to requirements-local.txt.
 #
-# 安装完本文件后即可启动服务，使用 OpenAI API 模式。
-# ════════════════════════════════════════════
+# After installing this file, you can start the service with OpenAI API mode.
+# =============================================
 
-# ── Web 框架 ──
+# -- Web Framework --
 fastapi>=0.109.0
 uvicorn[standard]>=0.27.0
 jinja2>=3.1.0
 python-multipart>=0.0.6
 
-# ── 数据验证 ──
+# -- Data Validation --
 pydantic>=2.0.0
 
-# ── HTTP 客户端 ──
+# -- HTTP Client --
 httpx==0.27.0
 
-# ── AI / LLM SDK ──
+# -- AI / LLM SDK --
 openai>=1.65.0,<2.0.0
 anthropic>=0.40.0
 volcengine-python-sdk[ark]>=1.0.0
 
-# ── 工具库 ──
+# -- Utilities --
 python-dotenv>=1.0.0
 json-repair>=0.30.0
 
-# ── 测试（开发用） ──
+# -- Testing (Development) --
 pytest>=7.0,<9.0
 pytest-asyncio>=0.23,<1.0
